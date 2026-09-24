@@ -1,0 +1,6 @@
+{
+  "name": "StayFinder",
+  "description": "Real-world property and student PG finding application connected to Firebase Firestore and Auth.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

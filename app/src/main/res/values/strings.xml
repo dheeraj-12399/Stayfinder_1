@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">StayFinder</string>
+    <string name="phone_login_title">Welcome to StayFinder</string>
+    <string name="phone_login_subtitle">Find verified PGs, rooms &amp; flats near your college or workplace</string>
+    <string name="enter_phone_number">Enter Mobile Number</string>
+    <string name="phone_helper_text">We will send a 6-digit verification code</string>
+    <string name="send_otp">Send Verification Code</string>
+    <string name="verify_otp_title">Verify Code</string>
+    <string name="otp_description">Enter the 6-digit OTP sent to</string>
+    <string name="resend_otp_in">Resend code in %1$d seconds</string>
+    <string name="resend_otp">Resend Code</string>
+    <string name="verify_otp">Verify &amp; Continue</string>
+    <string name="no_properties_available">No properties available yet.</string>
+    <string name="no_matching_properties">No matching StayFinder properties were found.</string>
+    <string name="network_error_title">Unable to connect.</string>
+    <string name="network_error_message">Please check your internet connection and try again.</string>
+    <string name="retry">Retry</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_bookings">Bookings</string>
+    <string name="nav_profile">Profile</string>
+    <string name="search_hint">Search city, area, college, locality…</string>
+    <string name="turnstile_header_title">Security Verification</string>
+    <string name="turnstile_protected_by">Protected by Cloudflare Turnstile</string>
+    <string name="turnstile_status_verified">Security verification passed</string>
+    <string name="turnstile_status_verifying">Verifying security challenge…</string>
+    <string name="turnstile_status_backend_validating">Validating security token with StayFinder…</string>
+    <string name="turnstile_status_failed">Security verification failed. Please tap retry.</string>
+    <string name="turnstile_status_expired">Security token expired. Please re-verify.</string>
+    <string name="turnstile_retry">Retry Verification</string>
+</resources>

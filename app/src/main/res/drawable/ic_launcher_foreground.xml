@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- StayFinder House / Building Structure in Emerald Accent -->
+    <path
+        android:pathData="M54,28L32,46L38,46L38,76L50,76L50,62L58,62L58,76L70,76L70,46L76,46Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="32"
+                android:startY="28"
+                android:endX="76"
+                android:endY="76"
+                android:type="linear">
+                <item android:color="#34D399" android:offset="0.0" />
+                <item android:color="#059669" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Roof highlight peak -->
+    <path
+        android:pathData="M54,26L28,47.5L31.5,51.5L54,33L76.5,51.5L80,47.5Z"
+        android:fillColor="#10B981" />
+    <!-- Location Pin Beacon inside house center -->
+    <path
+        android:pathData="M54,40C50.68,40 48,42.68 48,46C48,50.25 54,58 54,58C54,58 60,50.25 60,46C60,42.68 57.32,40 54,40ZM54,48C52.9,48 52,47.1 52,46C52,44.9 52.9,44 54,44C55.1,44 56,44.9 56,46C56,47.1 55.1,48 54,48Z"
+        android:fillColor="#FFFFFF" />
+</vector>

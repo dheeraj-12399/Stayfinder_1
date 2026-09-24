@@ -1,0 +1,11 @@
+{
+  "name": "stayfinder-backend",
+  "version": "1.0.0",
+  "description": "StayFinder Cloudflare Turnstile Verification Backend Service",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["stayfinder", "turnstile", "cloudflare", "verification"],
+  "license": "ISC"
+}
