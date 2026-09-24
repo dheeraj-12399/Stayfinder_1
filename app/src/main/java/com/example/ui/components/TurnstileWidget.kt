@@ -5,9 +5,12 @@ import android.graphics.Color as AndroidColor
 import android.util.Log
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.net.URLEncoder
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -120,6 +123,22 @@ fun TurnstileWidget(
             if (!key.isNullOrBlank()) key.trim() else "1x00000000000000000000AA"
         } catch (_: Exception) {
             "1x00000000000000000000AA"
+        }
+    }
+
+    // Resolve optional online HTTPS Turnstile verification page URL (e.g. hosted on Vercel)
+    val onlineUrl = remember(siteKey, reloadTrigger) {
+        try {
+            val rawUrl = BuildConfig::class.java.getField("TURNSTILE_PAGE_URL").get(null) as? String
+            if (!rawUrl.isNullOrBlank() && rawUrl.startsWith("http")) {
+                val encodedKey = URLEncoder.encode(siteKey, "UTF-8")
+                val separator = if (rawUrl.contains("?")) "&" else "?"
+                "$rawUrl${separator}sitekey=$encodedKey"
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -305,17 +324,52 @@ fun TurnstileWidget(
                                 webViewClient = object : WebViewClient() {
                                     override fun onPageFinished(view: WebView?, url: String?) {
                                         super.onPageFinished(view, url)
-                                        Log.d("TurnstileWidget", "Turnstile WebView loaded")
+                                        Log.d("TurnstileWidget", "Turnstile WebView loaded: $url")
+                                    }
+
+                                    // Intercept custom scheme deep link (e.g. stayfinder://turnstile-callback?token=...)
+                                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                                        val uri = request?.url ?: return false
+                                        if (uri.scheme == "stayfinder" && uri.host == "turnstile-callback") {
+                                            val token = uri.getQueryParameter("token")
+                                            val error = uri.getQueryParameter("error")
+                                            if (!token.isNullOrBlank()) {
+                                                post { onTokenReceived(token) }
+                                            } else if (!error.isNullOrBlank()) {
+                                                post { onError(error) }
+                                            }
+                                            return true
+                                        }
+                                        return false
+                                    }
+
+                                    override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                                        super.onReceivedError(view, request, error)
+                                        if (request?.isForMainFrame == true && onlineUrl != null) {
+                                            Log.w("TurnstileWidget", "Online Turnstile page unreachable, falling back to embedded HTML")
+                                            loadDataWithBaseURL(
+                                                "https://challenges.cloudflare.com",
+                                                htmlContent,
+                                                "text/html",
+                                                "UTF-8",
+                                                null
+                                            )
+                                        }
                                     }
                                 }
 
-                                loadDataWithBaseURL(
-                                    "https://challenges.cloudflare.com",
-                                    htmlContent,
-                                    "text/html",
-                                    "UTF-8",
-                                    null
-                                )
+                                if (onlineUrl != null) {
+                                    Log.d("TurnstileWidget", "Loading online Turnstile page: $onlineUrl")
+                                    loadUrl(onlineUrl)
+                                } else {
+                                    loadDataWithBaseURL(
+                                        "https://challenges.cloudflare.com",
+                                        htmlContent,
+                                        "text/html",
+                                        "UTF-8",
+                                        null
+                                    )
+                                }
                                 webViewInstance = this
                             }
                         },
@@ -379,13 +433,17 @@ fun TurnstileWidget(
                         onClick = {
                             reloadTrigger += 1
                             onResetRequested()
-                            webViewInstance?.loadDataWithBaseURL(
-                                "https://challenges.cloudflare.com",
-                                htmlContent,
-                                "text/html",
-                                "UTF-8",
-                                null
-                            )
+                            if (onlineUrl != null) {
+                                webViewInstance?.loadUrl(onlineUrl)
+                            } else {
+                                webViewInstance?.loadDataWithBaseURL(
+                                    "https://challenges.cloudflare.com",
+                                    htmlContent,
+                                    "text/html",
+                                    "UTF-8",
+                                    null
+                                )
+                            }
                         },
                         modifier = Modifier.size(32.dp).testTag("turnstile_retry_button")
                     ) {

@@ -1,0 +1,11 @@
+{
+  "name": "stayfinder-turnstile-vercel",
+  "version": "1.0.0",
+  "description": "StayFinder Cloudflare Turnstile Verification API on Vercel Serverless Functions",
+  "main": "api/verify-turnstile.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "keywords": ["stayfinder", "cloudflare", "turnstile", "vercel"],
+  "license": "ISC"
+}

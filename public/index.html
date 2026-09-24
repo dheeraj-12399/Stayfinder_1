@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>StayFinder Security Verification</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+    .card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #ffffff;
+    }
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+    .description {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+    .widget-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 70px;
+      margin-bottom: 16px;
+    }
+    .status-msg {
+      font-size: 0.82rem;
+      margin-top: 8px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .status-success {
+      color: #34d399;
+    }
+    .status-error {
+      color: #fb7185;
+    }
+    .retry-btn {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .retry-btn:hover {
+      background: #334155;
+    }
+    .footer {
+      margin-top: 16px;
+      font-size: 0.72rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="brand-row">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="brand-title">StayFinder Verification</span>
+    </div>
+    <p class="description">Please complete Cloudflare security verification to continue to phone authentication.</p>
+
+    <div class="widget-container">
+      <div id="cf-turnstile-wrapper"></div>
+    </div>
+
+    <div id="success-banner" class="status-msg status-success">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#34d399"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      <span>Verification passed! Returning to app...</span>
+    </div>
+
+    <div id="error-banner" class="status-msg status-error">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#fb7185"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <span id="error-text">Verification failed.</span>
+      <div><button class="retry-btn" onclick="resetWidget()">Retry</button></div>
+    </div>
+
+    <div class="footer">
+      <span>Protected by Cloudflare Turnstile</span>
+    </div>
+  </div>
+
+  <script>
+    let widgetId = null;
+
+    // Retrieve sitekey from URL query (?sitekey=...) or fallback to Cloudflare test sitekey
+    function getSiteKey() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const key = params.get('sitekey');
+        if (key && key.trim().length > 0) {
+          return key.trim();
+        }
+      } catch (e) {}
+      // Cloudflare test sitekey (always passes)
+      return "1x00000000000000000000AA";
+    }
+
+    function onTurnstileSuccess(token) {
+      document.getElementById('success-banner').style.display = 'flex';
+      document.getElementById('error-banner').style.display = 'none';
+
+      // 1. Android WebView JavaScript Bridge
+      if (window.AndroidBridge && typeof window.AndroidBridge.onTokenReceived === 'function') {
+        window.AndroidBridge.onTokenReceived(token);
+      }
+
+      // 2. Deep-link / Custom Scheme Navigation Fallback
+      try {
+        window.location.href = "stayfinder://turnstile-callback?token=" + encodeURIComponent(token);
+      } catch (err) {}
+    }
+
+    function onTurnstileError(error) {
+      document.getElementById('success-banner').style.display = 'none';
+      const errorBanner = document.getElementById('error-banner');
+      errorBanner.style.display = 'flex';
+      document.getElementById('error-text').innerText = (typeof error === 'string' && error) ? error : "Verification failed";
+
+      // 1. Android WebView JavaScript Bridge
+      if (window.AndroidBridge && typeof window.AndroidBridge.onError === 'function') {
+        window.AndroidBridge.onError(error || "Turnstile verification failed");
+      }
+
+      // 2. Deep-link fallback
+      try {
+        window.location.href = "stayfinder://turnstile-callback?error=" + encodeURIComponent(error || "Turnstile verification failed");
+      } catch (err) {}
+    }
+
+    function onTurnstileExpired() {
+      document.getElementById('success-banner').style.display = 'none';
+      if (window.AndroidBridge && typeof window.AndroidBridge.onExpired === 'function') {
+        window.AndroidBridge.onExpired();
+      }
+      resetWidget();
+    }
+
+    function resetWidget() {
+      document.getElementById('error-banner').style.display = 'none';
+      document.getElementById('success-banner').style.display = 'none';
+      if (widgetId !== null && window.turnstile) {
+        window.turnstile.reset(widgetId);
+      }
+    }
+
+    function initTurnstile() {
+      if (window.turnstile) {
+        const sitekey = getSiteKey();
+        widgetId = window.turnstile.render('#cf-turnstile-wrapper', {
+          sitekey: sitekey,
+          theme: 'dark',
+          size: 'flexible',
+          callback: onTurnstileSuccess,
+          'error-callback': onTurnstileError,
+          'expired-callback': onTurnstileExpired
+        });
+      } else {
+        setTimeout(initTurnstile, 100);
+      }
+    }
+
+    window.addEventListener('load', initTurnstile);
+  </script>
+</body>
+</html>
